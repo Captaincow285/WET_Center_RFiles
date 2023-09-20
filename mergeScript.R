@@ -5,13 +5,24 @@ library(plyr)
 library(stringr)
 library(lubridate)
 
+#Variables to edit
+PLC_FileName <- ""  # Enter the filename and/or path of the PLC data
+SCADA_FileName <- "" # Enter the filename and/or path of the SCADA data
+rawPLC = TRUE  # Should be True if the file was just downloaded from the Stridelinx portal
+
+
 # Read, set up time, and clean PLC data
-PLC.df <- read_csv("PLC_March9-March20.csv")
+PLC.df <- read_csv(PLC_FileName)
 PLC.df$time <- as.POSIXct(PLC.df$time, format = "%Y-%m-%d %H:%M:%S", tz="UTC")
-# PLC.df <- PLC.df[-c(11,12)]
+
+# This statement reverses the PLC data, since it comes from the Stridelinx in reverse order
+if (rawPLC){
+  PLC.df <- rev(as.data.frame(t(PLC.df)))
+  PLC.df <- as.data.frame(t(PLC.df))
+}
 
 #Read SCADA time and use it to clean up
-SCADA.df <- read.csv("SCADA_March13_June20.csv")
+SCADA.df <- read.csv(SCADA_FileName)
 SCADA.df$Date <- as.POSIXct(SCADA.df$Date, format="%d/%m/%Y")
 SCADA.df$DateTime <- as.POSIXct(paste(SCADA.df$Date, SCADA.df$Time), format = "%Y-%m-%d %H:%M:%S", tz="UTC")
 
@@ -75,7 +86,7 @@ for (i in 2:length(timeList)){
     #Avgs and inserts Dissolved Oxygen (SCADA data)
     doName <- paste("X.PS1.AER_", toString(k), "_SCALED_DO", sep="")
     avg <- mean(scadaMinute.df[,doName])
-    row[(k*4)] <- avg
+    row[(k*4)] <- avg 
     
     #Avgs and inserts Motor Speed (SCADA Data)
     csName <- paste("X.PS1.AR_", toString(k), "_COMAND_SPEED", sep="")
@@ -95,6 +106,5 @@ for (i in 2:length(timeList)){
   DATA.df[(nrow(DATA.df) + 1),] <- row
 }
 
-DATA.df <- na.omit(DATA.df)
+# DATA.df <- na.omit(DATA.df)
 write.csv(DATA.df, "data.csv", row.names=FALSE)
-

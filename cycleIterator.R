@@ -4,9 +4,9 @@ library(dplyr)
 library(plyr)
 library(stringr)
 
-data.df <- read.csv("data_June9_June12.csv")
+data.df <- read.csv("data_Aug17.csv")
 data.df <- data.df %>%
-  filter(between(as.POSIXct(data.df$DateTime), as.POSIXct("2023-06-15"), as.POSIXct("2023-06-18")))
+  filter(between(as.POSIXct(data.df$DateTime), as.POSIXct("2023-08-10"), as.POSIXct("2023-08-16")))
 
 #Rewrite cycles
 prevInfluent <- 0
@@ -39,23 +39,17 @@ for (rowNum in 2:nrow(data.df)){
       motorPowerList[i + 2] <- sum(data.df[cycleStart:rowNum, paste0("Motor", i, "Power")])
     }
     cycleData[nrow(cycleData) + 1,] <- motorPowerList
+    print("Cycle End")
   }
   
   #Detect start of cycles (is under sumCycle for reason)
-  if (data.df$Motor2Speed[rowNum] > 35.00 & !powerCycle & prevSpeed == 35.00){
+  if (data.df$Motor6Speed[rowNum] > 35.00 & !powerCycle & prevSpeed == 35.00){
     powerCycle = TRUE
     cycleStart <- rowNum
     initInfluent <- data.df$SumInfluent[rowNum]
-    
+    print("Cycle Start")
     motorPowerList[1] <- data.df$DateTime[rowNum]
   }
   
-  prevSpeed <- data.df$Motor2Speed[rowNum]
+  prevSpeed <- data.df$Motor6Speed[rowNum]
 }
-
-basin1basin2scale <- c()
-basin1basin3scale <- c()
-#for (x in 1:length(basin1power)){
-#  basin1basin2scale <- append(basin1basin2scale, (basin1power[x] / basin2power[x]))
-#  basin1basin3scale <- append(basin1basin3scale, (basin1power[x] / basin3power[x]))
-#}
